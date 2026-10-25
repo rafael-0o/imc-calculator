@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de IMC</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Calculadora de IMC</h1>
+    <p>Índice de Massa Corporal — Informe peso e altura para calcular.</p>
+
+    <form id="form-imc" novalidate>
+      <div class="field">
+        <label for="peso">Peso (kg)</label>
+        <input type="number" id="peso" name="peso" step="0.01" min="0" inputmode="decimal" placeholder="Ex: 70" required />
+      </div>
+
+      <div class="field">
+        <label for="altura">Altura (m)</label>
+        <input type="number" id="altura" name="altura" step="0.01" min="0" inputmode="decimal" placeholder="Ex: 1,75" required />
+      </div>
+
+      <button type="submit" class="btn">Calcular</button>
+    </form>
+
+    <section id="resultado" class="resultado" hidden>
+      <h2>Resultado</h2>
+      <p>IMC: <span id="imc-valor">0.00</span></p>
+      <p>Classificação: <span id="classificacao">-</span></p>
+    </section>
+
+    <section id="erro" class="erro" hidden>
+      <p id="erro-mensagem"></p>
+    </section>
+  </main>
+
+  <script src="imc.js"></script>
+</body>
+</html>

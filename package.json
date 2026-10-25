@@ -1,0 +1,25 @@
+{
+  "name": "imc-calculator",
+  "version": "1.0.0",
+  "description": "Calculadora de IMC (Índice de Massa Corporal) estática com lógica em JavaScript testável, publicada via GitHub Pages e pipeline CI/CD.",
+  "main": "src/imc.js",
+  "scripts": {
+    "build": "npm run build:clean && npm run build:copy",
+    "build:clean": "rm -rf dist",
+    "build:copy": "mkdir -p dist && cp -r public/* dist/ && cp src/imc.js dist/",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "imc",
+    "calculator",
+    "health",
+    "ci/cd",
+    "github-pages"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
