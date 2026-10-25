@@ -60,6 +60,42 @@ function classificarIMC(imc) {
   return 'Obesidade';
 }
 
+if (typeof document !== 'undefined') {
+  const form = document.getElementById('form-imc');
+  const pesoInput = document.getElementById('peso');
+  const alturaInput = document.getElementById('altura');
+  const resultado = document.getElementById('resultado');
+  const imcValor = document.getElementById('imc-valor');
+  const classificacao = document.getElementById('classificacao');
+  const erro = document.getElementById('erro');
+  const erroMensagem = document.getElementById('erro-mensagem');
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    resultado.hidden = true;
+    erro.hidden = true;
+
+    if (!pesoInput.value || !alturaInput.value) {
+      erroMensagem.textContent = 'Informe peso e altura.';
+      erro.hidden = false;
+      return;
+    }
+
+    try {
+      const imc = calcularIMC(pesoInput.valueAsNumber, alturaInput.valueAsNumber);
+      imcValor.textContent = imc.toFixed(2);
+      classificacao.textContent = classificarIMC(imc);
+      resultado.hidden = false;
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
+      erroMensagem.textContent = error.message;
+      erro.hidden = false;
+    }
+  });
+}
+
 // Exporta apenas quando rodando no Node (jest, etc.).
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { calcularIMC, classificarIMC };
