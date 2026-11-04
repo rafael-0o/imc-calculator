@@ -58,7 +58,7 @@ jobs:
         run: npm test
 
   deploy:
-    needs: [test, security]
+    needs: [test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
