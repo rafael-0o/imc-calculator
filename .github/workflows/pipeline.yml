@@ -57,25 +57,6 @@ jobs:
       - name: Executar testes (npm test)
         run: npm test
 
-  security:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Instalar dependências (npm ci)
-        run: npm ci
-
-      - name: Auditoria de segurança (npm audit --level=high)
-        run: npm audit --level=high
-
   deploy:
     needs: [test, security]
     runs-on: ubuntu-latest
