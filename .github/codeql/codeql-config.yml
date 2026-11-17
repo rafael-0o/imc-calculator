@@ -1,0 +1,19 @@
+name: "CodeQL Config"
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+paths-ignore:
+  - node_modules
+  - dist
+  - tests
+  - "*.test.js"
+  - "*.spec.js"
+
+exclude:
+  - "*.test.js"
+  - "*.spec.js"
+  - "tests/**"
+  - "dist/**"
+  - "node_modules/**"
