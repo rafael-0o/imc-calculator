@@ -66,11 +66,15 @@ jobs:
         with:
           category: "/language:javascript"
 
-  dast:
+dast:
     name: DAST - OWASP ZAP Scan
     needs: test
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -92,16 +96,30 @@ jobs:
           cd dist
           python -m http.server 8080 &
           echo "SERVER_PID=$!" >> $GITHUB_ENV
-          sleep 3
+          sleep 5
+
+      - name: Verify server is ready
+        run: |
+          for i in {1..10}; do
+            if curl -f http://localhost:8080 > /dev/null 2>&1; then
+              echo "Server is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start"
+          exit 1
 
       - name: OWASP ZAP Baseline Scan
+        id: zap_scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:8080'
           fail_action: false
           issue_output: true
           artifact_name: 'zapreport'
-          
+          rules_file_name: '.github/zap/zap-rules.yml'
+          cmd_options: '-config spider.maxDepth=3 -config spider.maxChildren=10 -config spider.postForm=true'
 
       - name: Stop preview server
         if: always()
@@ -113,6 +131,81 @@ jobs:
         with:
           name: zapreport
           path: report/
+          retention-days: 30
+
+      - name: Process ZAP Results
+        if: always()
+        run: |
+          if [ -f "report/report_html.html" ]; then
+            echo "ZAP HTML report generated"
+          fi
+          if [ -f "report/report_json.json" ]; then
+            echo "ZAP JSON report generated"
+            # Count alerts by severity
+            HIGH=$(jq '[.site[0].alerts[] | select(.riskcode == "3")] | length' report/report_json.json 2>/dev/null || echo 0)
+            MEDIUM=$(jq '[.site[0].alerts[] | select(.riskcode == "2")] | length' report/report_json.json 2>/dev/null || echo 0)
+            LOW=$(jq '[.site[0].alerts[] | select(.riskcode == "1")] | length' report/report_json.json 2>/dev/null || echo 0)
+            INFO=$(jq '[.site[0].alerts[] | select(.riskcode == "0")] | length' report/report_json.json 2>/dev/null || echo 0)
+            echo "HIGH=$HIGH" >> $GITHUB_OUTPUT
+            echo "MEDIUM=$MEDIUM" >> $GITHUB_OUTPUT
+            echo "LOW=$LOW" >> $GITHUB_OUTPUT
+            echo "INFO=$INFO" >> $GITHUB_OUTPUT
+            echo "ZAP Alerts Summary:"
+            echo "  HIGH: $HIGH"
+            echo "  MEDIUM: $MEDIUM"
+            echo "  LOW: $LOW"
+            echo "  INFO: $INFO"
+          fi
+
+      - name: Fail on High/Medium Alerts
+        if: always()
+        run: |
+          HIGH=${{ steps.process_zap.outputs.HIGH }}
+          MEDIUM=${{ steps.process_zap.outputs.MEDIUM }}
+          
+          if [ "$HIGH" -gt 0 ] || [ "$MEDIUM" -gt 0 ]; then
+            echo "::error::ZAP scan found $HIGH HIGH and $MEDIUM MEDIUM severity alerts"
+            exit 1
+          else
+            echo "No HIGH or MEDIUM severity alerts found"
+          fi
+
+      - name: Comment on PR with ZAP Summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'report/report_json.json';
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const alerts = report.site[0]?.alerts || [];
+              
+              const high = alerts.filter(a => a.riskcode === '3').length;
+              const medium = alerts.filter(a => a.riskcode === '2').length;
+              const low = alerts.filter(a => a.riskcode === '1').length;
+              const info = alerts.filter(a => a.riskcode === '0').length;
+              
+              const body = `## 🔍 OWASP ZAP DAST Scan Results
+              
+              | Severity | Count |
+              |----------|-------|
+              | 🔴 HIGH | ${high} |
+              | 🟡 MEDIUM | ${medium} |
+              | 🟢 LOW | ${low} |
+              | ℹ️ INFO | ${info} |
+              
+              ${high > 0 || medium > 0 ? '⚠️ **Build will fail** due to HIGH/MEDIUM alerts' : '✅ No critical alerts found'}
+              
+              [View full HTML report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
 
   deploy:
     name: Deploy to GitHub Pages

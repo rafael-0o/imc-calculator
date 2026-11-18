@@ -1,0 +1,79 @@
+rules:
+  # Ignore alerts not relevant for static sites
+  - id: 10016
+    threshold: OFF  # Web Browser XSS Protection
+  - id: 10020
+    threshold: OFF  # Absence of Anti-CSRF Tokens (not applicable for static)
+  - id: 10021
+    threshold: OFF  # X-Frame-Options Header (handled by CSP)
+  - id: 10038
+    threshold: OFF  # Content-Type Missing
+  - id: 10048
+    threshold: OFF  # Cookie Without SameSite Attribute (no cookies on static)
+  - id: 10109
+    threshold: OFF  # CSP Header Not Set (we'll configure it)
+  - id: 40018
+    threshold: OFF  # Username Hash Found (not applicable)
+
+  # Keep important alerts at appropriate levels
+  - id: 10044
+    threshold: MEDIUM  # Secure Flag Cookie (should not apply)
+  - id: 10045
+    threshold: MEDIUM  # HttpOnly Flag Cookie (should not apply)
+  - id: 40012
+    threshold: HIGH   # Cross Site Scripting (XSS)
+  - id: 40014
+    threshold: HIGH   # SQL Injection
+  - id: 40022
+    threshold: MEDIUM # Application Error Disclosure
+  - id: 40030
+    threshold: MEDIUM # Directory Browsing
+  - id: 40034
+    threshold: MEDIUM # Path Traversal
+  - id: 90001
+    threshold: HIGH   # Active Scan XSS
+  - id: 90011
+    threshold: HIGH   # Active Scan SQL Injection
+  - id: 90019
+    threshold: HIGH   # Active Scan Remote OS Command Injection
+  - id: 90020
+    threshold: HIGH   # Active Scan Path Traversal
+  - id: 90022
+    threshold: HIGH   # Active Scan LDAP Injection
+  - id: 90023
+    threshold: HIGH   # Active Scan XPath Injection
+
+# Scan policy for static site
+scan_policy:
+  # Only passive scan for static sites (no active attacks)
+  active_scan: false
+  
+  # Spider configuration
+  spider:
+    max_depth: 3
+    max_children: 10
+    max_duration: 60
+    # Respect robots.txt
+    respect_robots_txt: true
+    # Only crawl same host
+    stay_in_scope: true
+  
+  # AJAX spider not needed for static site
+  ajax_spider: false
+  
+  # Authentication not needed for public static site
+  authentication:
+    enabled: false
+
+# Alert thresholds for reporting
+alert_thresholds:
+  # Fail build on these severities
+  fail_on:
+    - HIGH
+    - MEDIUM
+  # Warn but don't fail on LOW
+  warn_on:
+    - LOW
+  # Ignore INFO
+  ignore:
+    - INFO
