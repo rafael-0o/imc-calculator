@@ -101,6 +101,7 @@ jobs:
           fail_action: false
           cmd_options: '-config api.disablekey=true'
           allow_issue_writing: false
+          artifact_name: 'zap-report'
 
       - name: Stop preview server
         if: always()
