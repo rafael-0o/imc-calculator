@@ -11,6 +11,7 @@ permissions:
   pages: write
   id-token: write
   security-events: write
+  issues: write
 
 concurrency:
   group: "pages"
@@ -100,6 +101,7 @@ jobs:
           fail_action: false
           issue_output: true
           artifact_name: 'zapreport'
+          
 
       - name: Stop preview server
         if: always()
