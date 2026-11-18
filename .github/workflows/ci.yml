@@ -101,7 +101,7 @@ jobs:
           fail_action: false
           cmd_options: '-config api.disablekey=true'
           allow_issue_writing: false
-          artifact_name: 'zap_report'
+          artifact_name: 'zapreport'
 
       - name: Stop preview server
         if: always()
@@ -111,7 +111,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap_report
+          name: zapreport
           path: report_*.html
 
   deploy:
