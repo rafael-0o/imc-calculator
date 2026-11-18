@@ -11,6 +11,7 @@ permissions:
   pages: write
   id-token: write
   security-events: write
+  issues: write
 
 concurrency:
   group: "pages"
@@ -98,7 +99,8 @@ jobs:
         with:
           target: 'http://localhost:8080'
           fail_action: false
-          issue_output: true
+          cmd_options: '-config api.disablekey=true'
+          allow_issue_writing: false
 
       - name: Stop preview server
         if: always()
